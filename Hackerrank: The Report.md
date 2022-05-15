@@ -3,6 +3,7 @@ You are given two tables: Students and Grades. Students contains three columns: 
 Grades contains the following data:
 
 Grade | Min_Mark | Max_Mark
+------|----------|----------
  1    |    0     |   9
  2    |   10     |  19
  3    |   20     |  29
@@ -23,7 +24,7 @@ Grade | Min_Mark | Max_Mark
  same grade (1-7) assigned to them, order those particular students by their marks in ascending
  order.
  
- ```
+ ```sql
  SELECT 
     IF (Grades.Grade < 8, 'NULL', Students.Name)
     Grades.Grade
