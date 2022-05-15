@@ -1,5 +1,4 @@
-/** 
-Problem Statement:
+# Problem Statement:
 You are given two tables: Students and Grades. Students contains three columns: ID, Name, and Marks. 
 Grades contains the following data:
 
@@ -24,6 +23,7 @@ Grade | Min_Mark | Max_Mark
  same grade (1-7) assigned to them, order those particular students by their marks in ascending
  order.
  
+ ```
  SELECT 
     IF (Grades.Grade < 8, 'NULL', Students.Name)
     Grades.Grade
@@ -33,5 +33,4 @@ Grade | Min_Mark | Max_Mark
   ON Students.Marks BETWEEN Grades.Min_Mark AND Grades.Max_Mark
   ORDER BY Grades.Grade DESC, Students.Name
   ;
-
-*/
+```
