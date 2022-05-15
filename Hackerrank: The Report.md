@@ -27,8 +27,8 @@ Grade | Min_Mark | Max_Mark
  ## Solution
  ```sql
  SELECT 
-    IF (Grades.Grade < 8, 'NULL', Students.Name)
-    Grades.Grade
+    IF (Grades.Grade < 8, 'NULL', Students.Name),
+    Grades.Grade,
     Students.Marks
   FROM Students
   JOIN Grades
