@@ -1,4 +1,4 @@
-## Problem Statement:
+## Problem Statement
 You are given two tables: Students and Grades. Students contains three columns: ID, Name, and Marks. 
 Grades contains the following data:
 
