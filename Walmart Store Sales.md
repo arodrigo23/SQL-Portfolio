@@ -1,4 +1,4 @@
-##Walmart Store Sales
+## Walmart Store Sales
 This project utilizes the Walmart Dataset (Retail) from Kaggle: https://www.kaggle.com/datasets/rutuspatel/walmart-dataset-retail
 The dataset is imported to PostgreSQL and queried to answer sales questions. 
 
