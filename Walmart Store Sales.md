@@ -1,0 +1,140 @@
+##Walmart Store Sales
+This project utilizes the Walmart Dataset (Retail) from Kaggle: https://www.kaggle.com/datasets/rutuspatel/walmart-dataset-retail
+The dataset is imported to PostgreSQL and queried to answer sales questions. 
+
+```sql
+CREATE TABLE walmart_store_sales
+(
+    store integer,
+    date text,
+    weekly_sales double precision,
+    holiday_flag integer,
+    temperature double precision,
+    fuel_price double precision,
+    cpi double precision,
+    unemployment double precision
+);
+
+COPY walmart_store_sales
+FROM '\\Walmart_Store_sales.csv'
+DELIMITER ','
+CSV HEADER;
+
+-- Create view with cleaned date strings
+CREATE VIEW walmart_store_sales_cleaned_dates AS
+	SELECT *,
+	CASE
+		WHEN substr(DATE, 2, 1) = '/' AND substr(DATE, 4, 1) = '/'
+			THEN right(DATE, 4) || '-0' || left(DATE, 1) || '-0' || substr(DATE, 3, 1) 
+		WHEN substr(DATE, 2, 1) = '/' AND substr(DATE, 5, 1) = '/'
+			THEN right(DATE, 4) || '-0' || left(DATE, 1) || '-' || substr(DATE, 3, 2)
+		WHEN substr(DATE, 3, 1) = '/' AND substr(DATE, 5, 1) = '/'
+			THEN right(DATE, 4) || '-' || left(DATE, 2) || '-0' || substr(DATE, 4, 1)
+		WHEN substr(DATE, 3, 1) = '/' AND substr(DATE, 3, 1) = '/'
+			THEN right(DATE, 4) || '-' || left(DATE, 2) || '-' || substr(DATE, 4, 2)
+		WHEN substr(DATE, 3, 1) = '-' 
+			THEN right(DATE, 4) || '-' || substr(DATE, 4, 2) || '-' || left(DATE, 2)
+	END AS date_cleaned
+	FROM walmart_store_sales;
+	
+-- Which store had the maximum amount in sales overall?
+SELECT
+	store,
+	SUM(weekly_sales) as total_sales
+FROM walmart_store_sales_cleaned_dates
+GROUP BY store
+ORDER BY 2 DESC
+LIMIT 1;
+
+-- Which holidays are most profitable?
+   /* Super Bowl: week 6 of the year
+   	  Independence Day: week 26 or 27 of the year
+      Labour Day: week 36 of the year
+	  Halloween: week 44 or 45 of the year
+   	  Thanksgiving: week 47 of the year
+   	  Christmas: week 52 of the year  */
+SELECT
+	sub.holiday,
+	SUM(weekly_sales) as total_weekly_sales
+FROM (
+	SELECT *,
+		CASE
+			WHEN ( holiday_flag = 1 AND EXTRACT(week FROM date_cleaned::DATE) = 6 ) THEN 'Super Bowl'
+			WHEN ( holiday_flag = 1 AND EXTRACT(week FROM date_cleaned::DATE) IN (26, 27) ) THEN 'Independence Day'
+			WHEN ( holiday_flag = 1 AND EXTRACT(week FROM date_cleaned::DATE) = 36 ) THEN 'Labour Day'
+			WHEN ( holiday_flag = 1 AND EXTRACT(week FROM date_cleaned::DATE) IN (44, 45) ) THEN 'Halloween'
+			WHEN ( holiday_flag = 1 AND EXTRACT(week FROM date_cleaned::DATE) = 47 ) THEN 'Thanksgiving'
+			WHEN ( holiday_flag = 1 AND EXTRACT(week FROM date_cleaned::DATE) = 52 ) THEN 'Christmas'
+		END AS holiday
+	FROM walmart_store_sales_cleaned_dates 
+	WHERE holiday_flag = 1
+	ORDER BY date_cleaned ) sub
+WHERE sub.holiday IS NOT NULL
+GROUP BY 1
+ORDER BY 2 DESC;
+
+--Which quarter was most profitable overall?
+SELECT
+	EXTRACT(year FROM date_cleaned::DATE) as year,
+	EXTRACT(quarter FROM date_cleaned::DATE)as quarter,
+	SUM(weekly_sales) as total_sales
+FROM walmart_store_sales_cleaned_dates
+GROUP BY 1, 2
+ORDER BY 3 DESC
+LIMIT 1;
+
+--Which quarter generally has the highest sales?
+SELECT
+	EXTRACT(quarter FROM date_cleaned::DATE) as quarter,
+	SUM(weekly_sales) as total_sales
+FROM walmart_store_sales_cleaned_dates
+GROUP BY 1
+ORDER BY 2 DESC
+LIMIT 1;
+
+--Which store had the highest sales in Q3 2012?
+SELECT
+	store,
+	SUM(weekly_sales) as total_sales
+FROM walmart_store_sales_cleaned_dates
+WHERE EXTRACT(year FROM date_cleaned::DATE) = '2012' AND EXTRACT(quarter FROM date_cleaned::DATE) = 3
+GROUP BY 1
+ORDER BY 2 DESC
+LIMIT 1;
+
+--What is the average sales during the week of Christmas?
+SELECT
+	AVG(weekly_sales) AS avg_christmas_sales
+FROM (
+	SELECT *,
+		CASE
+			WHEN ( holiday_flag = 1 AND EXTRACT(week FROM date_cleaned::DATE) = 6 ) THEN 'Super Bowl'
+			WHEN ( holiday_flag = 1 AND EXTRACT(week FROM date_cleaned::DATE) IN (26, 27) ) THEN 'Independence Day'
+			WHEN ( holiday_flag = 1 AND EXTRACT(week FROM date_cleaned::DATE) = 36 ) THEN 'Labor Day'
+			WHEN ( holiday_flag = 1 AND EXTRACT(week FROM date_cleaned::DATE) IN (44, 45) ) THEN 'Halloween'
+			WHEN ( holiday_flag = 1 AND EXTRACT(week FROM date_cleaned::DATE) = 47 ) THEN 'Thanksgiving'
+			WHEN ( holiday_flag = 1 AND EXTRACT(week FROM date_cleaned::DATE) = 52 ) THEN 'Christmas'
+		END AS holiday
+	FROM walmart_store_sales_cleaned_dates 
+	WHERE holiday_flag = 1
+	ORDER BY date_cleaned ) sub
+WHERE holiday = 'Christmas'
+
+--What is the average weekly sales when temperatures are 80°F or above?
+SELECT 
+	AVG(sub.high_temp_sales) as avg_weekly_sales
+FROM (
+	SELECT 
+		CASE WHEN temperature >= 80.0 THEN weekly_sales ELSE NULL END AS high_temp_sales
+	FROM walmart_store_sales_cleaned_dates ) sub
+WHERE high_temp_sales IS NOT NULL
+
+--What is the average weekly sales when temperatures are 40°F or below?
+SELECT 
+	AVG(sub.low_temp_sales) as avg_weekly_sales
+FROM (
+	SELECT 
+		CASE WHEN temperature <= 40.0 THEN weekly_sales ELSE NULL END AS low_temp_sales
+	FROM walmart_store_sales_cleaned_dates ) sub
+WHERE sub.low_temp_sales IS NOT NULL
+```
