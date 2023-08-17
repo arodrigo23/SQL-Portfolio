@@ -84,7 +84,6 @@ FROM BIT_DB.JanSales
 WHERE LENGTH(orderID) = 6;
 
 -- What is the total revenue for each product sold in January? (Revenue can be calculated using the number of products sold and the price of the products)
--- FINAL ANSWER:
 SELECT 
     Product,
     SUM(Quantity) * price AS total_revenue
