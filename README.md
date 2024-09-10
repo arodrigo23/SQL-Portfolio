@@ -4,4 +4,4 @@ If you have any questions, please feel free to reach out.
 ### Contact Information
 LinkedIn: linkedin.com/in/arodrigo23
 
-Email: arodrigo23@gmail.com
+Email: angela.m.rodriguez32@gmail.com
